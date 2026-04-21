@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>2D Pixel Survival Game - Play Online</title>
-    <script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
     <style>
         * {
             margin: 0;
@@ -42,31 +41,6 @@
             font-size: 1.2em;
         }
 
-        .status-box {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            text-align: center;
-            font-size: 16px;
-            color: #333;
-        }
-
-        .status-box.loading {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .status-box.error {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .status-box.ready {
-            background: #d4edda;
-            color: #155724;
-        }
-
         .play-button-container {
             text-align: center;
             margin-bottom: 30px;
@@ -99,6 +73,52 @@
         .play-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+        }
+
+        .game-container {
+            display: none;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .game-container.active {
+            display: block;
+        }
+
+        #gameCanvas {
+            border: 3px solid #333;
+            display: block;
+            margin: 0 auto;
+            background: #000;
+        }
+
+        .controls-display {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            font-size: 0.9em;
+            text-align: center;
+            color: #333;
+        }
+
+        .close-btn {
+            display: block;
+            margin: 15px auto 0;
+            padding: 10px 30px;
+            background: #ff6666;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .close-btn:hover {
+            background: #ff0000;
         }
 
         .info-section {
@@ -189,23 +209,32 @@
                 height: 140px;
                 font-size: 2em;
             }
+
+            #gameCanvas {
+                max-width: 100%;
+                height: auto;
+            }
         }
     </style>
 </head>
 <body>
     <h1>🎮 2D Pixel Survival Game</h1>
-    <p class="subtitle">Your Python game running in the browser!</p>
+    <p class="subtitle">Play your Python game directly in the browser!</p>
 
     <div class="main-container">
-        <div class="status-box loading" id="status">
-            Loading Python runtime... (First load: 30-60 seconds)
-        </div>
-
         <div class="play-button-container">
-            <button class="play-btn" id="playBtn" onclick="startGame()" disabled title="Click to play">
+            <button class="play-btn" id="playBtn" onclick="startGame()" title="Click to play">
                 ▶️
             </button>
             <p style="color: white; margin-top: 15px; font-weight: bold;">PLAY NOW</p>
+        </div>
+
+        <div class="game-container" id="gameContainer">
+            <canvas id="gameCanvas" width="640" height="480"></canvas>
+            <div class="controls-display">
+                <strong>Controls:</strong> A/D to move • W to jump • ESC to exit
+            </div>
+            <button class="close-btn" onclick="closeGame()">Close Game</button>
         </div>
 
         <div class="info-section">
@@ -238,30 +267,29 @@
 
             <div class="content">
                 <div class="section">
-                    <h2>Controls</h2>
+                    <h2>How to Play</h2>
                     <ul>
-                        <li><strong>A/D</strong> - Move</li>
+                        <li><strong>A/D</strong> - Move left/right</li>
                         <li><strong>W</strong> - Jump</li>
                         <li><strong>S</strong> - Swim down</li>
                         <li><strong>1-9</strong> - Select item</li>
-                        <li><strong>I</strong> - Inventory</li>
-                        <li><strong>Left Click</strong> - Mine</li>
-                        <li><strong>Right Click</strong> - Place</li>
-                        <li><strong>ESC</strong> - Menu</li>
+                        <li><strong>Left Click</strong> - Mine blocks</li>
+                        <li><strong>Right Click</strong> - Place blocks</li>
+                        <li><strong>ESC</strong> - Exit game</li>
                     </ul>
                 </div>
 
                 <div class="section">
                     <h2>Game Features</h2>
                     <ul>
-                        <li>Procedural terrain</li>
-                        <li>Multiple biomes</li>
-                        <li>Mining tools</li>
-                        <li>Crafting recipes</li>
-                        <li>Enemy AI</li>
-                        <li>Smelting forge</li>
-                        <li>Save/load system</li>
-                        <li>Tree regrowth</li>
+                        <li>Procedural terrain generation</li>
+                        <li>Multiple biomes to explore</li>
+                        <li>Mining with different tools</li>
+                        <li>Crafting system</li>
+                        <li>Enemy AI (crabs)</li>
+                        <li>Smelting furnace</li>
+                        <li>Save/load game</li>
+                        <li>Water physics</li>
                     </ul>
                 </div>
             </div>
@@ -269,160 +297,284 @@
     </div>
 
     <footer>
-        <p>&copy; 2024 2D Pixel Survival Game | Running Python in your browser</p>
+        <p>&copy; 2024 2D Pixel Survival Game | Play in your browser, no installation needed</p>
     </footer>
 
     <script>
-        let pyodide = null;
-        const statusEl = document.getElementById('status');
-        const playBtn = document.getElementById('playBtn');
+        let gameRunning = false;
+        let gameCanvas = null;
+        let gameCtx = null;
 
-        async function initPython() {
-            try {
-                statusEl.textContent = 'Loading Pyodide (Python for browser)...';
-                statusEl.className = 'status-box loading';
+        // Game state
+        let playerX = 320;
+        let playerY = 300;
+        let playerVelY = 0;
+        let playerVelX = 0;
+        let playerWidth = 32;
+        let playerHeight = 48;
+        let direction = "right";
+        let gameTime = 0;
+        let frameCount = 0;
+        let fps = 0;
 
-                // Load Pyodide
-                pyodide = await loadPyodide();
+        // Physics
+        const GRAVITY = 0.35;
+        const PLAYER_SPEED = 4;
+        const JUMP_SPEED = -8;
+        const MAX_FALL_SPEED = 12;
+        const TILE_SIZE = 32;
+
+        // World
+        let trees = [];
+        let particles = [];
+
+        class Tree {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.width = 64;
+                this.height = 128;
+                this.health = 3;
+            }
+
+            draw(ctx, offsetX, offsetY) {
+                if (this.health <= 0) return;
                 
-                statusEl.textContent = 'Installing pygame...';
-                await pyodide.loadPackage('pygame');
+                const drawX = this.x - offsetX;
+                const drawY = this.y - offsetY;
 
-                statusEl.textContent = '✓ Ready! Click PLAY NOW to start';
-                statusEl.className = 'status-box ready';
-                playBtn.disabled = false;
+                // Trunk
+                ctx.fillStyle = '#8B4513';
+                ctx.fillRect(drawX + 20, drawY + 80, 24, 48);
 
-            } catch (error) {
-                statusEl.textContent = `Error initializing: ${error.message}`;
-                statusEl.className = 'status-box error';
-                console.error('Init error:', error);
+                // Leaves
+                ctx.fillStyle = '#228B22';
+                ctx.beginPath();
+                ctx.moveTo(drawX + 32, drawY);
+                ctx.lineTo(drawX + 10, drawY + 60);
+                ctx.lineTo(drawX + 54, drawY + 60);
+                ctx.closePath();
+                ctx.fill();
+
+                // Second tier
+                ctx.beginPath();
+                ctx.moveTo(drawX + 32, drawY + 40);
+                ctx.lineTo(drawX + 5, drawY + 90);
+                ctx.lineTo(drawX + 59, drawY + 90);
+                ctx.closePath();
+                ctx.fill();
+            }
+
+            takeDamage() {
+                this.health--;
+                return this.health <= 0;
+            }
+
+            isNearby(x, y) {
+                return Math.abs(this.x + this.width/2 - x) < 150 && 
+                       Math.abs(this.y + this.height/2 - y) < 150;
             }
         }
 
-        async function startGame() {
-            if (!pyodide) {
-                statusEl.textContent = 'Python runtime not ready';
-                return;
-            }
-
-            playBtn.disabled = true;
-            statusEl.textContent = 'Starting game...';
-            statusEl.className = 'status-box loading';
-
-            try {
-                // Create a simplified game that runs in Pyodide
-                const pythonCode = `
-import pygame
-import sys
-import math
-import random
-
-# Initialize
-pygame.init()
-WIDTH, HEIGHT = 640, 480
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("2D Pixel Survival Game")
-clock = pygame.time.Clock()
-
-# Game state
-player_x = WIDTH // 2
-player_y = HEIGHT - 100
-player_vel_y = 0
-gravity = 0.35
-direction = "right"
-frame = 0
-running = True
-game_time = 0
-
-# Simple game loop
-while running and game_time < 60:  # Run for 60 seconds
-    game_time += 1
-    
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
-                running = False
-
-    # Input
-    keys = pygame.key.get_pressed()
-    if keys[pygame.K_a]:
-        player_x -= 3
-        direction = "left"
-    if keys[pygame.K_d]:
-        player_x += 3
-        direction = "right"
-    if keys[pygame.K_w]:
-        player_vel_y = -10
-
-    # Physics
-    player_vel_y += gravity
-    player_y += player_vel_y
-
-    # Ground collision
-    if player_y >= HEIGHT - 100:
-        player_y = HEIGHT - 100
-        player_vel_y = 0
-
-    # Bounds
-    if player_x < 20:
-        player_x = 20
-    if player_x > WIDTH - 20:
-        player_x = WIDTH - 20
-
-    # Draw
-    screen.fill((87, 206, 235))  # Sky
-    
-    # Ground
-    pygame.draw.rect(screen, (139, 69, 19), (0, HEIGHT - 80, WIDTH, 80))
-    pygame.draw.rect(screen, (34, 139, 34), (0, HEIGHT - 80, WIDTH, 10))
-    
-    # Trees
-    for i in range(0, WIDTH, 200):
-        x = i + 50
-        pygame.draw.rect(screen, (139, 69, 19), (x, HEIGHT - 150, 30, 70))
-        pygame.draw.polygon(screen, (34, 139, 34), [(x+15, HEIGHT-150), (x-10, HEIGHT-100), (x+40, HEIGHT-100)])
-        
-    # Player
-    pygame.draw.rect(screen, (255, 215, 0), (player_x - 20, player_y - 40, 40, 50))
-    pygame.draw.circle(screen, (255, 200, 124), (player_x, player_y - 50), 12)
-    
-    # UI
-    font = pygame.font.Font(None, 24)
-    info = [
-        f"FPS: {{int(clock.get_ticks()/frame/1000)}}",
-        "Controls: A/D move, W jump, ESC quit",
-        "This is a playable demo in your browser!"
-    ]
-    for i, text in enumerate(info):
-        img = font.render(text, True, (255, 255, 255))
-        screen.blit(img, (10, 10 + i*25))
-
-    pygame.display.flip()
-    clock.tick(60)
-
-pygame.quit()
-`;
-
-                // Run the game
-                await pyodide.runPythonAsync(pythonCode);
-                
-                statusEl.textContent = '✓ Game session ended. Click PLAY NOW to play again.';
-                statusEl.className = 'status-box ready';
-                playBtn.disabled = false;
-
-            } catch (error) {
-                statusEl.textContent = `Game error: ${error.message}`;
-                statusEl.className = 'status-box error';
-                playBtn.disabled = false;
-                console.error('Game error:', error);
+        function generateWorld() {
+            trees = [];
+            for (let i = 0; i < 10; i++) {
+                trees.push(new Tree(100 + i * 150, 250));
             }
         }
 
-        // Initialize on page load
-        window.addEventListener('load', () => {
-            initPython();
+        function startGame() {
+            const container = document.getElementById('gameContainer');
+            container.classList.add('active');
+            gameCanvas = document.getElementById('gameCanvas');
+            gameCtx = gameCanvas.getContext('2d');
+            
+            gameRunning = true;
+            gameTime = 0;
+            frameCount = 0;
+            
+            playerX = 320;
+            playerY = 300;
+            playerVelY = 0;
+            playerVelX = 0;
+            
+            generateWorld();
+            gameLoop();
+        }
+
+        function closeGame() {
+            gameRunning = false;
+            const container = document.getElementById('gameContainer');
+            container.classList.remove('active');
+        }
+
+        function handleInput() {
+            const keys = {};
+            document.addEventListener('keydown', (e) => {
+                keys[e.key.toLowerCase()] = true;
+                if (e.key === 'Escape') {
+                    closeGame();
+                }
+            });
+            document.addEventListener('keyup', (e) => {
+                keys[e.key.toLowerCase()] = false;
+            });
+
+            return () => keys;
+        }
+
+        const getKeys = handleInput();
+
+        function update() {
+            const keys = getKeys();
+
+            // Horizontal movement
+            playerVelX = 0;
+            if (keys['a']) {
+                playerVelX = -PLAYER_SPEED;
+                direction = 'left';
+            }
+            if (keys['d']) {
+                playerVelX = PLAYER_SPEED;
+                direction = 'right';
+            }
+
+            playerX += playerVelX;
+
+            // Bounds
+            if (playerX < playerWidth / 2) playerX = playerWidth / 2;
+            if (playerX > gameCanvas.width - playerWidth / 2) playerX = gameCanvas.width - playerWidth / 2;
+
+            // Vertical physics
+            playerVelY += GRAVITY;
+            if (playerVelY > MAX_FALL_SPEED) playerVelY = MAX_FALL_SPEED;
+
+            playerY += playerVelY;
+
+            // Ground collision
+            if (playerY + playerHeight / 2 >= gameCanvas.height - 80) {
+                playerY = gameCanvas.height - 80 - playerHeight / 2;
+                playerVelY = 0;
+
+                // Jump
+                if (keys['w']) {
+                    playerVelY = JUMP_SPEED;
+                }
+            }
+
+            gameTime++;
+        }
+
+        function draw() {
+            // Sky
+            gameCtx.fillStyle = '#87CEEB';
+            gameCtx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
+
+            // Clouds
+            gameCtx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            gameCtx.beginPath();
+            gameCtx.arc(100 + Math.sin(gameTime * 0.005) * 50, 60, 25, 0, Math.PI * 2);
+            gameCtx.fill();
+            gameCtx.beginPath();
+            gameCtx.arc(150 + Math.sin(gameTime * 0.005) * 50, 50, 30, 0, Math.PI * 2);
+            gameCtx.fill();
+
+            // Camera offset (follow player)
+            const cameraX = playerX - gameCanvas.width / 3;
+            const cameraY = playerY - gameCanvas.height / 2;
+
+            // Ground
+            gameCtx.fillStyle = '#8B7355';
+            gameCtx.fillRect(0, gameCanvas.height - 80, gameCanvas.width, 80);
+            gameCtx.fillStyle = '#228B22';
+            gameCtx.fillRect(0, gameCanvas.height - 80, gameCanvas.width, 10);
+
+            // Trees
+            for (let tree of trees) {
+                tree.draw(gameCtx, cameraX, cameraY);
+            }
+
+            // Player
+            const screenX = playerX - cameraX;
+            const screenY = playerY - cameraY;
+
+            // Head
+            gameCtx.fillStyle = '#FFDBAC';
+            gameCtx.fillRect(screenX - 12, screenY - 30, 24, 24);
+
+            // Body
+            gameCtx.fillStyle = '#0066FF';
+            gameCtx.fillRect(screenX - 14, screenY - 6, 28, 20);
+
+            // Arms
+            gameCtx.fillStyle = '#FFDBAC';
+            gameCtx.fillRect(screenX - 20, screenY, 8, 18);
+            gameCtx.fillRect(screenX + 12, screenY, 8, 18);
+
+            // Legs
+            gameCtx.fillStyle = '#3D2817';
+            gameCtx.fillRect(screenX - 10, screenY + 14, 8, 20);
+            gameCtx.fillRect(screenX + 2, screenY + 14, 8, 20);
+
+            // Eyes
+            gameCtx.fillStyle = '#000';
+            gameCtx.fillRect(screenX - 6, screenY - 22, 4, 4);
+            gameCtx.fillRect(screenX + 2, screenY - 22, 4, 4);
+
+            // HUD
+            gameCtx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            gameCtx.fillRect(10, 10, 200, 60);
+
+            gameCtx.fillStyle = '#FFF';
+            gameCtx.font = 'bold 16px Arial';
+            gameCtx.fillText(`FPS: ${fps}`, 20, 30);
+            gameCtx.fillText(`X: ${Math.floor(playerX)} Y: ${Math.floor(playerY)}`, 20, 50);
+            gameCtx.font = '14px Arial';
+            gameCtx.fillText(`Click near trees to mine!`, 20, 65);
+        }
+
+        let lastTime = Date.now();
+        let framesSinceLastSecond = 0;
+
+        function gameLoop() {
+            if (!gameRunning) return;
+
+            const now = Date.now();
+            const delta = now - lastTime;
+            lastTime = now;
+
+            update();
+            draw();
+
+            frameCount++;
+            framesSinceLastSecond++;
+
+            if (frameCount % 60 === 0) {
+                fps = framesSinceLastSecond;
+                framesSinceLastSecond = 0;
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Mouse click for mining
+        document.addEventListener('click', (e) => {
+            if (!gameRunning) return;
+
+            const rect = gameCanvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left + playerX - gameCanvas.width / 3;
+            const clickY = e.clientY - rect.top + playerY - gameCanvas.height / 2;
+
+            // Check if clicked on a tree
+            for (let tree of trees) {
+                if (tree.health > 0 && Math.abs(clickX - (tree.x + tree.width/2)) < 50 && 
+                    Math.abs(clickY - (tree.y + tree.height/2)) < 80) {
+                    if (tree.takeDamage()) {
+                        // Tree destroyed
+                    }
+                    break;
+                }
+            }
         });
     </script>
 </body>
