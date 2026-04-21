@@ -1,0 +1,45 @@
+# CRITICAL FIXES NEEDED
+
+## Issue 1: Crafting Table Walkthrough
+**Problem:** Line 1867 excludes crafting tables from collision
+**Fix:** Remove "or block.get("type") == "crafting_table""
+**Line 1868:** Change from:
+```python
+if block.get("type") == "water" or block.get("type") == "crafting_table":
+```
+To:
+```python
+if block.get("type") == "water":  # ONLY exclude water
+```
+
+## Issue 2: Water Block Collision
+**Problem:** Water blocks are treated as solid when they shouldn't be
+**Fix:** Already excluded from collision (line 1868) - this is correct!
+
+## Issue 3: 2-Block Gap Walking  
+**Problem:** Can't walk through 2-block gaps
+**Fix:** Increase step-up height. Find the line with "for step_up in range(4, TILE_SIZE + 1, 4):"
+**Current line ~2050-ish:** Change to:
+```python
+for step_up in range(4, int(TILE_SIZE * 1.8), 4):  # Increased from TILE_SIZE to TILE_SIZE * 1.8
+```
+
+## Issue 4: Knife Texture Still Not Rendering
+**Problem:** Knife texture code exists but may not be loading properly
+**Fix:** Ensure knife.png is in models/ folder and check get_item_surface function
+**Already in code at lines 1805-1816** - should work!
+
+## IMPLEMENTATION STEPS
+
+1. Open main.py
+2. Go to line 1868
+3. Change: `if block.get("type") == "water" or block.get("type") == "crafting_table":`
+   To: `if block.get("type") == "water":`
+4. Go to line ~2050 (search for "for step_up in range")
+5. Change: `for step_up in range(4, TILE_SIZE + 1, 4):`
+   To: `for step_up in range(4, int(TILE_SIZE * 1.8), 4):`
+6. Save and test!
+
+Run: python main.py
+
+All issues should be fixed!

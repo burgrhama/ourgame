@@ -462,7 +462,7 @@ class Crab:
                 moved = True
             else:
                 # Try stepping up to one full tile.
-                for step_up in range(4, TILE_SIZE + 1, 4):
+                for step_up in range(4, int(TILE_SIZE * 1.8), 4):
                     try_y = self.y - step_up
                     if crab_position_valid(next_x, try_y, self.width, self.height):
                         self.x = next_x
@@ -920,7 +920,7 @@ GAME_STATE_MENU = "menu"
 GAME_STATE_PLAYING = "playing"
 GAME_STATE_INVENTORY = "inventory"
 GAME_STATE_FORGE = "forge"
-current_state = GAME_STATE_MENU
+current_state = GAME_STATE_PLAYING  # Start in playing state, not menu
 
 # Inventory grid
 INVENTORY_COLS = 5
@@ -1865,7 +1865,7 @@ def get_nearby_block_rects(world_x):
     rects = []
     # Always exclude water and crafting tables from collision
     for block in placed_blocks:
-        if block.get("type") == "water" or block.get("type") == "crafting_table":
+        if block.get("type") == "water":
             continue
         # All other blocks are solid (including arrows)
         block_rect = get_block_world_rect(block)
