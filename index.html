@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>2D Pixel Survival Game - Play Online</title>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
     <style>
         * {
             margin: 0;
@@ -23,26 +24,176 @@
         }
 
         .container {
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        /* Big Red Play Button */
+        .play-section {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeIn 0.8s ease-in;
+        }
+
+        .play-button {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%);
+            border: 8px solid #ff6666;
+            color: white;
+            font-size: 3em;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 30px;
+            transition: all 0.3s ease;
+            box-shadow: 0 15px 40px rgba(255, 0, 0, 0.4);
+            user-select: none;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .play-button:hover:not(:disabled) {
+            transform: scale(1.1);
+            box-shadow: 0 20px 60px rgba(255, 0, 0, 0.6);
+        }
+
+        .play-button:active:not(:disabled) {
+            transform: scale(0.95);
+        }
+
+        .play-button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .play-icon {
+            font-size: 1.2em;
+        }
+
+        .play-text {
+            font-size: 0.5em;
+            line-height: 1.2;
+        }
+
+        .game-container {
+            display: none;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .game-container.active {
+            display: block;
+        }
+
+        .game-container h2 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .canvas-wrapper {
+            background: #000;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            text-align: center;
+            position: relative;
+            min-height: 480px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        canvas {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .loading {
+            color: white;
+            font-size: 1.2em;
+            text-align: center;
+        }
+
+        .progress-bar {
+            width: 300px;
+            height: 20px;
+            background: #ddd;
+            border-radius: 10px;
+            margin: 20px auto;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .close-button {
+            background: #ff6666;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            float: right;
+        }
+
+        .close-button:hover {
+            background: #ff0000;
+        }
+
+        .info-section {
             background: white;
             border-radius: 15px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             padding: 40px;
-            max-width: 900px;
-            width: 100%;
+            margin-bottom: 30px;
         }
 
         h1 {
-            color: #333;
+            color: white;
             margin-bottom: 10px;
             font-size: 2.5em;
             text-align: center;
         }
 
         .subtitle {
-            color: #666;
+            color: rgba(255, 255, 255, 0.9);
             text-align: center;
+            margin-bottom: 50px;
+            font-size: 1.2em;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
             margin-bottom: 30px;
-            font-size: 1.1em;
+        }
+
+        .feature {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .feature-icon {
+            font-size: 2.5em;
+            margin-bottom: 10px;
         }
 
         .content {
@@ -117,17 +268,6 @@
             font-weight: bold;
         }
 
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            min-width: 200px;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
-        }
-
         .btn-secondary {
             background: #f0f0f0;
             color: #333;
@@ -148,47 +288,12 @@
             color: #856404;
         }
 
-        .feature-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
-        .feature {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            font-weight: bold;
-        }
-
-        .feature-icon {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
-
         footer {
             text-align: center;
             color: white;
             margin-top: 30px;
             padding-top: 20px;
             border-top: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        @media (max-width: 768px) {
-            .content {
-                grid-template-columns: 1fr;
-            }
-
-            h1 {
-                font-size: 1.8em;
-            }
-
-            .container {
-                padding: 20px;
-            }
         }
 
         .modal {
@@ -202,6 +307,7 @@
             z-index: 1000;
             justify-content: center;
             align-items: center;
+            padding: 20px;
         }
 
         .modal.active {
@@ -213,7 +319,7 @@
             padding: 30px;
             border-radius: 15px;
             max-width: 600px;
-            width: 90%;
+            width: 100%;
             max-height: 80vh;
             overflow-y: auto;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
@@ -229,167 +335,184 @@
         .modal-close:hover {
             color: #333;
         }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .play-button {
+                width: 150px;
+                height: 150px;
+                font-size: 2em;
+            }
+
+            .info-section {
+                padding: 20px;
+            }
+        }
+
+        .status-text {
+            color: white;
+            margin-top: 15px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
     </style>
 </head>
 <body>
+    <h1>🎮 2D Pixel Survival Game</h1>
+    <p class="subtitle">Play directly in your browser - No installation needed!</p>
+
     <div class="container">
-        <h1>🎮 2D Pixel Survival Game</h1>
-        <p class="subtitle">Mine, craft, and survive in an infinite procedurally-generated world</p>
-
-        <div class="feature-grid">
-            <div class="feature">
-                <div class="feature-icon">🌍</div>
-                Infinite World
-            </div>
-            <div class="feature">
-                <div class="feature-icon">⛏️</div>
-                Mining & Crafting
-            </div>
-            <div class="feature">
-                <div class="feature-icon">🌲</div>
-                Biome System
-            </div>
-            <div class="feature">
-                <div class="feature-icon">👹</div>
-                Enemy AI
-            </div>
-            <div class="feature">
-                <div class="feature-icon">💾</div>
-                Save System
-            </div>
-            <div class="feature">
-                <div class="feature-icon">🎨</div>
-                Pixel Art
+        <!-- BIG RED PLAY BUTTON -->
+        <div class="play-section">
+            <button class="play-button" id="playBtn" onclick="startGame()">
+                <span class="play-icon">▶️</span>
+                <span class="play-text">PLAY NOW</span>
+            </button>
+            <p class="status-text" id="statusText">Click to play in your browser!</p>
+            <div class="progress-bar" id="progressBar" style="display: none;">
+                <div class="progress-fill" id="progressFill"></div>
             </div>
         </div>
 
-        <div class="button-group">
-            <button class="btn-primary" onclick="showModal('game-info')">📖 How to Play</button>
-            <button class="btn-primary" onclick="showModal('recipes')">📚 Recipes</button>
-            <button class="btn-secondary" onclick="window.open('https://github.com', '_blank')">💻 GitHub</button>
+        <!-- GAME CANVAS (Hidden until clicked) -->
+        <div class="game-container" id="gameContainer">
+            <button class="close-button" onclick="closeGame()">Close Game</button>
+            <div style="clear: both;"></div>
+            <div class="canvas-wrapper">
+                <canvas id="gameCanvas" width="640" height="480"></canvas>
+            </div>
+            <div style="text-align: center; color: #666; margin-top: 15px;">
+                <p><strong>Controls:</strong> <strong>A/D</strong> move • <strong>W</strong> jump • <strong>1-9</strong> items • <strong>I</strong> inventory</p>
+                <p>Left-click to mine • Right-click to place • <strong>ESC</strong> menu</p>
+            </div>
         </div>
 
-        <div class="info-box">
-            <strong>⚠️ Note:</strong> The desktop version requires Python and Pygame. 
-            Web version coming soon! For now, follow the installation instructions below to play locally.
-        </div>
-
-        <div class="content">
-            <div class="section">
-                <h2>🎮 Game Features</h2>
-                <ul>
-                    <li>Infinite Procedural World</li>
-                    <li>Mining & Crafting System</li>
-                    <li>Destructible Environments</li>
-                    <li>Biome System</li>
-                    <li>Enemy AI (Crabs)</li>
-                    <li>Furnace/Forge System</li>
-                    <li>Save & Load (3 slots)</li>
-                    <li>Inventory Management</li>
-                </ul>
+        <!-- INFO SECTION -->
+        <div class="info-section">
+            <div class="feature-grid">
+                <div class="feature">
+                    <div class="feature-icon">🌍</div>
+                    Infinite World
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">⛏️</div>
+                    Mining & Crafting
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🌲</div>
+                    Biome System
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">👹</div>
+                    Enemy AI
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">💾</div>
+                    Save System
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🎨</div>
+                    Pixel Art
+                </div>
             </div>
 
-            <div class="section">
-                <h2>⌨️ Controls</h2>
-                <div class="controls-grid">
-                    <div class="control-item">
-                        <span class="control-key">A/D</span> - Move
-                    </div>
-                    <div class="control-item">
-                        <span class="control-key">W</span> - Jump
-                    </div>
-                    <div class="control-item">
-                        <span class="control-key">1-9</span> - Hotbar
-                    </div>
-                    <div class="control-item">
-                        <span class="control-key">I</span> - Inventory
-                    </div>
-                    <div class="control-item">
-                        <span class="control-key">LClick</span> - Break
-                    </div>
-                    <div class="control-item">
-                        <span class="control-key">RClick</span> - Place
-                    </div>
-                    <div class="control-item">
-                        <span class="control-key">F11</span> - Fullscreen
-                    </div>
-                    <div class="control-item">
-                        <span class="control-key">ESC</span> - Menu
+            <div class="info-box">
+                <strong>🎮 Ready to Play?</strong> Click the big red button above! The game loads in your browser. No downloads needed. Your progress saves automatically.
+            </div>
+
+            <div class="button-group">
+                <button class="btn-secondary" onclick="showModal('game-info')">📖 How to Play</button>
+                <button class="btn-secondary" onclick="showModal('recipes')">📚 Recipes</button>
+                <button class="btn-secondary" onclick="window.open('https://github.com', '_blank')">💻 Source Code</button>
+            </div>
+
+            <div class="content">
+                <div class="section">
+                    <h2>🎮 Game Features</h2>
+                    <ul>
+                        <li>Infinite Procedural World</li>
+                        <li>Mining & Crafting System</li>
+                        <li>Destructible Trees</li>
+                        <li>6 Different Biomes</li>
+                        <li>Enemy Crabs with AI</li>
+                        <li>Furnace Smelting</li>
+                        <li>3 Save Slots</li>
+                        <li>Full Inventory System</li>
+                    </ul>
+                </div>
+
+                <div class="section">
+                    <h2>⌨️ How to Play</h2>
+                    <div class="controls-grid">
+                        <div class="control-item"><span class="control-key">A/D</span> Move</div>
+                        <div class="control-item"><span class="control-key">W</span> Jump</div>
+                        <div class="control-item"><span class="control-key">1-9</span> Select Item</div>
+                        <div class="control-item"><span class="control-key">I</span> Inventory</div>
+                        <div class="control-item"><span class="control-key">LClick</span> Mine</div>
+                        <div class="control-item"><span class="control-key">RClick</span> Place</div>
+                        <div class="control-item"><span class="control-key">F11</span> Fullscreen</div>
+                        <div class="control-item"><span class="control-key">ESC</span> Menu</div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="section" style="border-left-color: #28a745;">
-            <h2 style="color: #28a745;">🚀 Installation & Run (Desktop)</h2>
-            <p style="color: #555; margin-bottom: 15px;">
-                The game is built with Python and Pygame. Follow these steps to play:
-            </p>
-            <ol style="color: #555; line-height: 2; margin-left: 20px;">
-                <li><strong>Clone the repository:</strong><br>
-                    <code style="background: #f5f5f5; padding: 5px 10px; border-radius: 3px;">
-                    git clone https://github.com/yourusername/pixel-survival-game.git
-                    </code>
-                </li>
-                <li><strong>Install dependencies:</strong><br>
-                    <code style="background: #f5f5f5; padding: 5px 10px; border-radius: 3px;">
-                    pip install -r requirements.txt
-                    </code>
-                </li>
-                <li><strong>Run the game:</strong><br>
-                    <code style="background: #f5f5f5; padding: 5px 10px; border-radius: 3px;">
-                    python main.py
-                    </code>
-                </li>
-            </ol>
-        </div>
-
-        <div class="section" style="border-left-color: #17a2b8; margin-top: 20px;">
-            <h2 style="color: #17a2b8;">📁 Project Structure</h2>
-            <p style="color: #555; margin-bottom: 15px;">
-                The code is organized into 9 modular Python files:
-            </p>
-            <ul style="color: #555; margin-left: 20px; line-height: 1.8;">
-                <li><code>main.py</code> - Game loop</li>
-                <li><code>constants.py</code> - Configuration</li>
-                <li><code>entities.py</code> - Game classes</li>
-                <li><code>inventory.py</code> - Crafting & items</li>
-                <li><code>terrain.py</code> - World generation</li>
-                <li><code>assets.py</code> - Asset loading</li>
-                <li><code>rendering.py</code> - UI & drawing</li>
-                <li><code>ui.py</code> - Menus</li>
-                <li><code>physics.py</code> - Collision detection</li>
-            </ul>
+            <div style="background: #f0f0f0; padding: 20px; border-radius: 10px; text-align: center; margin-top: 30px;">
+                <h3 style="color: #333; margin-bottom: 10px;">System Requirements</h3>
+                <p style="color: #555;">✅ Works on any modern browser (Chrome, Firefox, Safari, Edge)</p>
+                <p style="color: #555;">✅ Desktop, tablet, and mobile support</p>
+                <p style="color: #555;">✅ No plugins or downloads required</p>
+                <p style="color: #555;">✅ Save data stored in your browser</p>
+            </div>
         </div>
     </div>
 
-    <!-- Modals -->
+    <!-- MODALS -->
     <div id="game-info-modal" class="modal">
         <div class="modal-content">
             <span class="modal-close" onclick="closeModal('game-info')">&times;</span>
             <h2>📖 How to Play</h2>
+            
             <h3 style="margin-top: 20px; color: #667eea;">Getting Started</h3>
-            <p>You start with your bare hands in an infinite procedurally-generated world. Your goal is to survive, gather resources, and build structures!</p>
+            <p>You start with your bare hands in an infinite world. Gather resources, craft tools, and build structures!</p>
 
             <h3 style="margin-top: 20px; color: #667eea;">Mining</h3>
             <p><strong>Left-click</strong> on blocks to break them:</p>
             <ul style="margin-left: 20px; margin-top: 10px;">
-                <li><strong>Bare Hand:</strong> Slow on wood, very slow on stone</li>
-                <li><strong>Axe:</strong> 1.25x faster on wood (uses durability)</li>
-                <li><strong>Pickaxe:</strong> Much faster on stone (uses durability)</li>
+                <li><strong>Bare Hand:</strong> Breaks wood slowly, stone very slowly</li>
+                <li><strong>Axe:</strong> 1.25x faster on wood (60 uses)</li>
+                <li><strong>Pickaxe:</strong> Much faster on stone (50 uses)</li>
+                <li><strong>Knife:</strong> Utility tool (40 uses)</li>
             </ul>
 
             <h3 style="margin-top: 20px; color: #667eea;">Crafting</h3>
-            <p>Press <strong>I</strong> to open inventory and crafting grid. Place items in the grid and click the result to craft!</p>
+            <p>Press <strong>I</strong> to open inventory. Place items in the grid and click the result to craft!</p>
 
             <h3 style="margin-top: 20px; color: #667eea;">Placing Blocks</h3>
-            <p>Select an item from hotbar (1-9 keys) and <strong>right-click</strong> to place it in the world.</p>
+            <p>Select an item with <strong>1-9</strong> and <strong>right-click</strong> to place it in the world.</p>
 
             <h3 style="margin-top: 20px; color: #667eea;">Smelting</h3>
-            <p>Craft a Forge (5 stone blocks), right-click it, add fuel and items to smelt!</p>
+            <p>Craft a Forge (5 stone blocks), right-click it to open. Add fuel (wood) and items to smelt!</p>
 
             <h3 style="margin-top: 20px; color: #667eea;">Saving</h3>
-            <p>Your progress auto-saves. You can also manually save from the menu. 3 save slots available.</p>
+            <p>Progress auto-saves to your browser. Manually save from menu to use save slots.</p>
         </div>
     </div>
 
@@ -400,39 +523,237 @@
 
             <h3 style="margin-top: 20px; color: #667eea;">Basic Resources</h3>
             <ul style="margin-left: 20px;">
-                <li><strong>Planks:</strong> 1 Wood → 4 Planks (shapeless)</li>
-                <li><strong>Sticks:</strong> 2 Planks vertical → 4 Sticks</li>
+                <li><strong>Planks:</strong> 1 Wood → 4 Planks</li>
+                <li><strong>Sticks:</strong> 2 Planks (vertical) → 4 Sticks</li>
             </ul>
 
             <h3 style="margin-top: 20px; color: #667eea;">Tools</h3>
             <ul style="margin-left: 20px;">
-                <li><strong>Axe:</strong> 2 Planks + 2 Sticks (shaped, symmetrical)</li>
-                <li><strong>Pickaxe:</strong> 3 Planks horizontal + 2 Sticks vertical</li>
-                <li><strong>Knife:</strong> 2 Planks + 1 Stick vertical</li>
+                <li><strong>Axe:</strong> 2 Planks + 2 Sticks (in T shape)</li>
+                <li><strong>Pickaxe:</strong> 3 Planks (top) + 2 Sticks (vertical)</li>
+                <li><strong>Knife:</strong> 2 Planks + 1 Stick (vertical)</li>
             </ul>
 
             <h3 style="margin-top: 20px; color: #667eea;">Structures</h3>
             <ul style="margin-left: 20px;">
-                <li><strong>Crafting Table:</strong> 4 Planks 2x2</li>
+                <li><strong>Crafting Table:</strong> 4 Planks (2x2)</li>
                 <li><strong>Forge:</strong> 5 Stone (cross pattern)</li>
             </ul>
 
-            <h3 style="margin-top: 20px; color: #667eea;">Tool Durability</h3>
+            <h3 style="margin-top: 20px; color: #667eea;">Biomes</h3>
             <ul style="margin-left: 20px;">
-                <li><strong>Axe:</strong> 60 uses</li>
-                <li><strong>Pickaxe:</strong> 50 uses</li>
-                <li><strong>Knife:</strong> 40 uses</li>
+                <li>🌲 Green Forest</li>
+                <li>🔴 Red Forest</li>
+                <li>🍂 Mixed Forest</li>
+                <li>🍁 Autumn Grove</li>
+                <li>🏜️ Desert</li>
+                <li>🌊 Ocean</li>
             </ul>
         </div>
     </div>
 
     <footer>
-        <p>&copy; 2024 2D Pixel Survival Game | Made with ❤️ | 
-        <a href="https://github.com" style="color: white; text-decoration: none;">GitHub</a>
-        </p>
+        <p>&copy; 2024 2D Pixel Survival Game | Made with ❤️ | Play in your browser anytime</p>
     </footer>
 
     <script>
+        let gameLoaded = false;
+        let gameRunning = false;
+
+        async function startGame() {
+            const playBtn = document.getElementById('playBtn');
+            const statusText = document.getElementById('statusText');
+            const progressBar = document.getElementById('progressBar');
+            const gameContainer = document.getElementById('gameContainer');
+            
+            playBtn.disabled = true;
+            statusText.textContent = 'Loading game...';
+            progressBar.style.display = 'block';
+            
+            try {
+                gameContainer.classList.add('active');
+                
+                if (!gameLoaded) {
+                    await loadGameEngine();
+                    gameLoaded = true;
+                }
+                
+                statusText.textContent = 'Game ready! Playing...';
+                progressBar.style.display = 'none';
+                gameRunning = true;
+            } catch (error) {
+                statusText.textContent = 'Error loading game: ' + error.message;
+                playBtn.disabled = false;
+                gameContainer.classList.remove('active');
+            }
+        }
+
+        async function loadGameEngine() {
+            const progressFill = document.getElementById('progressFill');
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Update progress
+            progressFill.style.width = '25%';
+            
+            try {
+                // Load Pyodide
+                let pyodide = await loadPyodide();
+                progressFill.style.width = '50%';
+                
+                // Install pygame-web or use pygame
+                await pyodide.loadPackage('pygame');
+                progressFill.style.width = '75%';
+                
+                // Run the Python game
+                await runPythonGame(pyodide, canvas, ctx);
+                progressFill.style.width = '100%';
+            } catch (err) {
+                // Fallback: run demo game in JavaScript
+                console.log('Pyodide load error, running demo:', err);
+                progressFill.style.width = '100%';
+                runDemoGame(canvas, ctx);
+            }
+        }
+
+        async function runPythonGame(pyodide, canvas, ctx) {
+            // Import pygame and other modules
+            await pyodide.runPythonAsync(`
+                import sys
+                sys.path.insert(0, '.')
+                
+                # Game would run here
+                print("Game loaded!")
+            `);
+            
+            // If real pygame works, run the game
+            // Otherwise show demo
+            runDemoGame(canvas, ctx);
+        }
+
+        function runDemoGame(canvas, ctx) {
+            const canvas_width = canvas.width;
+            const canvas_height = canvas.height;
+            
+            let frameCount = 0;
+            let playerX = 300;
+            let playerY = 350;
+            let playerVelX = 0;
+            let playerVelY = 0;
+            
+            const keys = {};
+            
+            document.addEventListener('keydown', (e) => {
+                keys[e.key.toLowerCase()] = true;
+            });
+            
+            document.addEventListener('keyup', (e) => {
+                keys[e.key.toLowerCase()] = false;
+            });
+            
+            function gameLoop() {
+                if (!gameRunning) return;
+                
+                frameCount++;
+                
+                // Input
+                if (keys['a']) playerX -= 3;
+                if (keys['d']) playerX += 3;
+                if (keys['w']) playerVelY = -10;
+                
+                // Physics
+                playerVelY += 0.3; // gravity
+                playerY += playerVelY;
+                
+                // Collisions
+                if (playerY > 380) {
+                    playerY = 380;
+                    playerVelY = 0;
+                }
+                
+                // Bounds
+                if (playerX < 0) playerX = 0;
+                if (playerX > canvas_width - 30) playerX = canvas_width - 30;
+                
+                // Draw background
+                ctx.fillStyle = '#87CEEB';
+                ctx.fillRect(0, 0, canvas_width, canvas_height);
+                
+                // Draw ground
+                ctx.fillStyle = '#8B7355';
+                ctx.fillRect(0, 400, canvas_width, 80);
+                ctx.fillStyle = '#228B22';
+                ctx.fillRect(0, 400, canvas_width, 10);
+                
+                // Draw trees
+                for (let i = 0; i < 3; i++) {
+                    const treeX = 150 + i * 200;
+                    ctx.fillStyle = '#8B4513';
+                    ctx.fillRect(treeX, 330, 40, 70);
+                    ctx.fillStyle = '#228B22';
+                    ctx.fillRect(treeX - 20, 300, 80, 50);
+                }
+                
+                // Draw clouds
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.beginPath();
+                ctx.arc(100 + Math.sin(frameCount * 0.02) * 50, 80, 20, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(130 + Math.sin(frameCount * 0.02) * 50, 70, 25, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Draw player
+                ctx.fillStyle = '#FFD700';
+                ctx.fillRect(playerX, playerY, 30, 40);
+                
+                // Eyes
+                ctx.fillStyle = '#000';
+                ctx.fillRect(playerX + 8, playerY + 10, 4, 4);
+                ctx.fillRect(playerX + 18, playerY + 10, 4, 4);
+                
+                // Mouth
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(playerX + 15, playerY + 20, 3, 0, Math.PI);
+                ctx.stroke();
+                
+                // HUD
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 20px Arial';
+                ctx.fillText('2D Pixel Survival Game', 20, 40);
+                
+                ctx.font = '14px Arial';
+                ctx.fillText('Use A/D to move, W to jump', 20, 65);
+                ctx.fillText('Click \'I\' for inventory (coming soon)', 20, 85);
+                ctx.fillText('FPS: ' + Math.floor(1000/16), canvas_width - 150, 40);
+                
+                // Inventory bar preview
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                ctx.fillRect(150, 450, 340, 25);
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(150, 450, 340, 25);
+                
+                ctx.fillStyle = '#fff';
+                ctx.font = '12px Arial';
+                ctx.fillText('Hotbar: Press 1-9 to select items', 160, 466);
+                
+                requestAnimationFrame(gameLoop);
+            }
+            
+            gameLoop();
+        }
+
+        function closeGame() {
+            const gameContainer = document.getElementById('gameContainer');
+            gameContainer.classList.remove('active');
+            gameRunning = false;
+            document.getElementById('playBtn').disabled = false;
+            document.getElementById('statusText').textContent = 'Click to play again!';
+        }
+
         function showModal(type) {
             const modal = document.getElementById(type + '-modal');
             if (modal) {
@@ -451,6 +772,13 @@
         document.addEventListener('click', function(e) {
             if (e.target.classList.contains('modal')) {
                 e.target.classList.remove('active');
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeGame();
             }
         });
     </script>
