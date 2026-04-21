@@ -1,0 +1,63 @@
+# BUGS AND ISSUES TO FIX IN THE GAME CODE
+
+## Critical Bugs
+1. **Global Variable Declaration in apply_fall_damage()**: The function modifies global variables but doesn't declare `player_death_message_until` as global. Add `global player_death_message_until` to the function.
+
+2. **Player Water Detection**: The water check `player_in_water = get_water_tile(player_tile_x, player_tile_y)` only checks one tile. For better accuracy, check multiple points on the player (e.g., head, feet) to prevent clipping issues.
+
+## Gameplay Issues
+3. **Swimming Responsiveness**: While improved, swimming might still feel sluggish in deep water. Consider adjusting buoyancy and friction values based on testing.
+
+4. **Tree Underwater Rendering**: Even with spawn prevention, existing trees in underwater areas from old saves might still render. Need a cleanup or migration script.
+
+5. **Crab Underwater Persistence**: Similar to trees, crabs from old saves might remain underwater. Add a despawn check for submerged entities.
+
+## Performance Issues
+6. **Chunk Loading**: With large worlds, loading many chunks can cause lag. Implement chunk unloading for distant areas.
+
+7. **Entity Updates**: Crabs and other entities update even when far from player. Add distance-based update throttling.
+
+## Code Quality Issues
+8. **Magic Numbers**: Many hardcoded values (e.g., SEA_LEVEL_TILE = SURFACE_TILE_Y - 3) should be configurable constants.
+
+9. **Function Length**: Some functions like generate_terrain_chunk() are very long. Consider breaking them into smaller functions.
+
+10. **Error Handling**: No try/catch blocks for file operations, pygame initialization, etc. Add proper error handling.
+
+## Missing Features (from MISSING_FEATURES_PLAN.txt)
+11. **Bedrock Layer**: Unbreakable bottom layer not implemented.
+
+12. **Tool Durability**: Tools don't wear out or break.
+
+13. **Biome Transitions**: Abrupt biome changes instead of smooth transitions.
+
+14. **Cave Darkness**: No lighting system for caves.
+
+15. **Animal AI**: Basic roaming, no complex behavior.
+
+16. **Saving System**: May not save all state properly (e.g., water chunks, entity positions).
+
+## UI/UX Issues
+17. **Inventory Management**: No drag-and-drop between inventory and hotbar slots.
+
+18. **Crafting Feedback**: No visual feedback for invalid recipes.
+
+19. **Health Display**: Health bar could show more detailed damage states.
+
+20. **Fullscreen Toggle**: Button might not work on all systems.
+
+## Balance Issues
+21. **Resource Distribution**: Ores might be too rare/common in certain biomes.
+
+22. **Damage Values**: Fall damage, enemy damage, tool damage need balancing.
+
+23. **Movement Speed**: Water movement is slower, but might need adjustment.
+
+## Technical Debt
+24. **Code Organization**: Mix of global variables and functions. Consider classes for better structure.
+
+25. **Asset Loading**: No fallback for missing textures, crashes on missing files.
+
+26. **Memory Usage**: Large dictionaries for chunks, no cleanup.
+
+27. **Threading**: No asynchronous loading, all operations block the main thread.

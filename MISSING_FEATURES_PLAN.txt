@@ -1,0 +1,124 @@
+CUSTOM GAME ROADMAP (GROUNDED STYLE)
+
+Direction:
+- Keep sandbox building and exploration.
+- Avoid direct Minecraft copies for names, systems, and progression.
+- Keep the world realistic and grounded (no heavy fantasy themes).
+
+Current status:
+- Movement, inventory, crafting, tree break/regrow, block place/break, health, death/respawn are in.
+- Cave feature is planned.
+- Textures are being produced now.
+
+1) BLOCK SET TO ADD (REALISTIC)
+- Soil Block
+- Clay Block
+- Limestone Block
+- Granite Block
+- Sand Block (fall behavior later)
+- Gravel Block (fall behavior later)
+- Coal Vein Block
+- Iron Vein Block
+- Copper Vein Block
+- Bedrock Layer Block (unbreakable)
+- Timber Block
+- Leaf Block
+
+Crafted utility blocks:
+- Workbench
+- Kiln
+- Storage Crate
+- Lamp Post
+
+2) BIOMES TO ADD
+- Meadow
+- Pine Forest
+- Marsh
+- Dry Flats
+- Rocky Hills
+- Snow Ridge
+- River Valley
+- Coastal Plain
+
+Biome systems still needed:
+- Unique tree/plant generation per biome
+- Biome-specific resource distribution
+- Landmark generation (ruins, camps, old roads)
+- Smooth transitions between biome borders
+
+3) TOOLS AND WEAPONS (CUSTOM, REALISTIC)
+Tool family:
+- Hand Axe (wood)
+- Pick Hammer (stone/ore)
+- Shovel (soil/sand)
+- Crowbar (salvage/utility)
+- Hunting Knife (light combat and harvesting)
+
+Material tiers:
+- Scrap
+- Wood
+- Iron
+- Hardened Steel
+
+Missing systems:
+- Durability and repair
+- Tier-based efficiency
+- Tool requirement rules per block
+- Damage values and attack speed balancing
+
+4) ANIMALS AND ENEMIES (NON-FANTASY)
+Passive:
+- Deer
+- Rabbit
+- Boar
+- Crow
+
+Hostile/Threat:
+- Wolf
+- Wild dog pack
+- Bandit scavenger
+- Cave raider
+
+Missing AI systems:
+- Roaming and idle behavior
+- Alert/aggro logic
+- Spawn conditions by time/biome
+- Drop tables and loot rarity
+
+5) CAVE PLAN (GROUNDED)
+Generation:
+- Layered underground materials (soil, stone, ore bands)
+- Narrow passages and larger chambers
+- Underground water pockets
+- Collapsed sections and dead-end shafts
+
+Gameplay:
+- Darkness and light management
+- Breathing/visibility pressure in deep zones (optional)
+- Cave enemies
+- Fall hazards and unstable terrain
+
+6) PROGRESSION LOOP
+- Gather -> Craft -> Upgrade tools -> Explore deeper -> Collect better resources -> Unlock new crafting stations
+- Use Kiln for material processing
+- Add practical progression objectives (repair shelter, power light network, secure cave route)
+
+7) TEXTURE PIPELINE (IN PROGRESS)
+Current note:
+- Textures are being made now.
+
+Still needed:
+- Final style guide (palette, roughness, realism level)
+- Naming convention for assets (example: biome_object_variant.png)
+- Placeholder cleanup pass
+- Animation list for creatures/tools/effects
+- UI polish textures (bars, slot borders, icons)
+
+8) BUILD ORDER
+1. Core realistic blocks + Workbench/Kiln/Storage Crate
+2. Tool family implementation (Axe/Pick Hammer/Shovel)
+3. First cave generation pass
+4. First animal + first hostile group
+5. Biome expansion and landmarks
+6. Progression balancing
+7. Full texture integration pass

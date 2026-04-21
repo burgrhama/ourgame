@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2D Pixel Survival Game - Play Online</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .section {
+            background: #f9f9f9;
+            padding: 25px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .section ul {
+            list-style: none;
+            line-height: 1.8;
+        }
+
+        .section li {
+            color: #555;
+            margin-bottom: 8px;
+        }
+
+        .section li:before {
+            content: "🎮 ";
+            margin-right: 8px;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .control-item {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            font-size: 0.9em;
+        }
+
+        .control-key {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 15px 40px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-width: 200px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .info-box {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: #856404;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .feature {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .feature-icon {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        footer {
+            text-align: center;
+            color: white;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .container {
+                padding: 20px;
+            }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-close {
+            float: right;
+            font-size: 2em;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .modal-close:hover {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 2D Pixel Survival Game</h1>
+        <p class="subtitle">Mine, craft, and survive in an infinite procedurally-generated world</p>
+
+        <div class="feature-grid">
+            <div class="feature">
+                <div class="feature-icon">🌍</div>
+                Infinite World
+            </div>
+            <div class="feature">
+                <div class="feature-icon">⛏️</div>
+                Mining & Crafting
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🌲</div>
+                Biome System
+            </div>
+            <div class="feature">
+                <div class="feature-icon">👹</div>
+                Enemy AI
+            </div>
+            <div class="feature">
+                <div class="feature-icon">💾</div>
+                Save System
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🎨</div>
+                Pixel Art
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button class="btn-primary" onclick="showModal('game-info')">📖 How to Play</button>
+            <button class="btn-primary" onclick="showModal('recipes')">📚 Recipes</button>
+            <button class="btn-secondary" onclick="window.open('https://github.com', '_blank')">💻 GitHub</button>
+        </div>
+
+        <div class="info-box">
+            <strong>⚠️ Note:</strong> The desktop version requires Python and Pygame. 
+            Web version coming soon! For now, follow the installation instructions below to play locally.
+        </div>
+
+        <div class="content">
+            <div class="section">
+                <h2>🎮 Game Features</h2>
+                <ul>
+                    <li>Infinite Procedural World</li>
+                    <li>Mining & Crafting System</li>
+                    <li>Destructible Environments</li>
+                    <li>Biome System</li>
+                    <li>Enemy AI (Crabs)</li>
+                    <li>Furnace/Forge System</li>
+                    <li>Save & Load (3 slots)</li>
+                    <li>Inventory Management</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>⌨️ Controls</h2>
+                <div class="controls-grid">
+                    <div class="control-item">
+                        <span class="control-key">A/D</span> - Move
+                    </div>
+                    <div class="control-item">
+                        <span class="control-key">W</span> - Jump
+                    </div>
+                    <div class="control-item">
+                        <span class="control-key">1-9</span> - Hotbar
+                    </div>
+                    <div class="control-item">
+                        <span class="control-key">I</span> - Inventory
+                    </div>
+                    <div class="control-item">
+                        <span class="control-key">LClick</span> - Break
+                    </div>
+                    <div class="control-item">
+                        <span class="control-key">RClick</span> - Place
+                    </div>
+                    <div class="control-item">
+                        <span class="control-key">F11</span> - Fullscreen
+                    </div>
+                    <div class="control-item">
+                        <span class="control-key">ESC</span> - Menu
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" style="border-left-color: #28a745;">
+            <h2 style="color: #28a745;">🚀 Installation & Run (Desktop)</h2>
+            <p style="color: #555; margin-bottom: 15px;">
+                The game is built with Python and Pygame. Follow these steps to play:
+            </p>
+            <ol style="color: #555; line-height: 2; margin-left: 20px;">
+                <li><strong>Clone the repository:</strong><br>
+                    <code style="background: #f5f5f5; padding: 5px 10px; border-radius: 3px;">
+                    git clone https://github.com/yourusername/pixel-survival-game.git
+                    </code>
+                </li>
+                <li><strong>Install dependencies:</strong><br>
+                    <code style="background: #f5f5f5; padding: 5px 10px; border-radius: 3px;">
+                    pip install -r requirements.txt
+                    </code>
+                </li>
+                <li><strong>Run the game:</strong><br>
+                    <code style="background: #f5f5f5; padding: 5px 10px; border-radius: 3px;">
+                    python main.py
+                    </code>
+                </li>
+            </ol>
+        </div>
+
+        <div class="section" style="border-left-color: #17a2b8; margin-top: 20px;">
+            <h2 style="color: #17a2b8;">📁 Project Structure</h2>
+            <p style="color: #555; margin-bottom: 15px;">
+                The code is organized into 9 modular Python files:
+            </p>
+            <ul style="color: #555; margin-left: 20px; line-height: 1.8;">
+                <li><code>main.py</code> - Game loop</li>
+                <li><code>constants.py</code> - Configuration</li>
+                <li><code>entities.py</code> - Game classes</li>
+                <li><code>inventory.py</code> - Crafting & items</li>
+                <li><code>terrain.py</code> - World generation</li>
+                <li><code>assets.py</code> - Asset loading</li>
+                <li><code>rendering.py</code> - UI & drawing</li>
+                <li><code>ui.py</code> - Menus</li>
+                <li><code>physics.py</code> - Collision detection</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="game-info-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal('game-info')">&times;</span>
+            <h2>📖 How to Play</h2>
+            <h3 style="margin-top: 20px; color: #667eea;">Getting Started</h3>
+            <p>You start with your bare hands in an infinite procedurally-generated world. Your goal is to survive, gather resources, and build structures!</p>
+
+            <h3 style="margin-top: 20px; color: #667eea;">Mining</h3>
+            <p><strong>Left-click</strong> on blocks to break them:</p>
+            <ul style="margin-left: 20px; margin-top: 10px;">
+                <li><strong>Bare Hand:</strong> Slow on wood, very slow on stone</li>
+                <li><strong>Axe:</strong> 1.25x faster on wood (uses durability)</li>
+                <li><strong>Pickaxe:</strong> Much faster on stone (uses durability)</li>
+            </ul>
+
+            <h3 style="margin-top: 20px; color: #667eea;">Crafting</h3>
+            <p>Press <strong>I</strong> to open inventory and crafting grid. Place items in the grid and click the result to craft!</p>
+
+            <h3 style="margin-top: 20px; color: #667eea;">Placing Blocks</h3>
+            <p>Select an item from hotbar (1-9 keys) and <strong>right-click</strong> to place it in the world.</p>
+
+            <h3 style="margin-top: 20px; color: #667eea;">Smelting</h3>
+            <p>Craft a Forge (5 stone blocks), right-click it, add fuel and items to smelt!</p>
+
+            <h3 style="margin-top: 20px; color: #667eea;">Saving</h3>
+            <p>Your progress auto-saves. You can also manually save from the menu. 3 save slots available.</p>
+        </div>
+    </div>
+
+    <div id="recipes-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal('recipes')">&times;</span>
+            <h2>📚 Crafting Recipes</h2>
+
+            <h3 style="margin-top: 20px; color: #667eea;">Basic Resources</h3>
+            <ul style="margin-left: 20px;">
+                <li><strong>Planks:</strong> 1 Wood → 4 Planks (shapeless)</li>
+                <li><strong>Sticks:</strong> 2 Planks vertical → 4 Sticks</li>
+            </ul>
+
+            <h3 style="margin-top: 20px; color: #667eea;">Tools</h3>
+            <ul style="margin-left: 20px;">
+                <li><strong>Axe:</strong> 2 Planks + 2 Sticks (shaped, symmetrical)</li>
+                <li><strong>Pickaxe:</strong> 3 Planks horizontal + 2 Sticks vertical</li>
+                <li><strong>Knife:</strong> 2 Planks + 1 Stick vertical</li>
+            </ul>
+
+            <h3 style="margin-top: 20px; color: #667eea;">Structures</h3>
+            <ul style="margin-left: 20px;">
+                <li><strong>Crafting Table:</strong> 4 Planks 2x2</li>
+                <li><strong>Forge:</strong> 5 Stone (cross pattern)</li>
+            </ul>
+
+            <h3 style="margin-top: 20px; color: #667eea;">Tool Durability</h3>
+            <ul style="margin-left: 20px;">
+                <li><strong>Axe:</strong> 60 uses</li>
+                <li><strong>Pickaxe:</strong> 50 uses</li>
+                <li><strong>Knife:</strong> 40 uses</li>
+            </ul>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 2D Pixel Survival Game | Made with ❤️ | 
+        <a href="https://github.com" style="color: white; text-decoration: none;">GitHub</a>
+        </p>
+    </footer>
+
+    <script>
+        function showModal(type) {
+            const modal = document.getElementById(type + '-modal');
+            if (modal) {
+                modal.classList.add('active');
+            }
+        }
+
+        function closeModal(type) {
+            const modal = document.getElementById(type + '-modal');
+            if (modal) {
+                modal.classList.remove('active');
+            }
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal')) {
+                e.target.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>
